@@ -2,6 +2,12 @@
 
 #import "AHKNavigationController.h"
 
+@protocol AHKNavigationControllerExtension <NSObject>
+
+- (BOOL)shouldBeginAHKBackNavigationGesture;
+
+@end
+
 @interface AHKNavigationController () <UINavigationControllerDelegate, UIGestureRecognizerDelegate>
 /// A Boolean value indicating whether navigation controller is currently pushing a new view controller on the stack.
 @property (nonatomic, getter = isDuringPushAnimation) BOOL duringPushAnimation;
@@ -88,7 +94,7 @@
         // Disable pop gesture in two situations:
         // 1) when the pop animation is in progress
         // 2) when user swipes quickly a couple of times and animations don't have time to be performed
-        return [self.viewControllers count] > 1 && !self.isDuringPushAnimation;
+        return [self.viewControllers count] > 1 && !self.isDuringPushAnimation && [self topViewControllerAllowsGesture];
     } else {
         // default value
         return YES;
@@ -115,6 +121,18 @@
     if ([delegate respondsToSelector:invocation.selector]) {
         [invocation invokeWithTarget:delegate];
     }
+}
+
+#pragma mark Extension
+
+- (BOOL)topViewControllerAllowsGesture
+{
+    BOOL allows = YES;
+    if ([self.topViewController respondsToSelector:@selector(shouldBeginAHKBackNavigationGesture)]) {
+        allows = [(id)self.topViewController shouldBeginAHKBackNavigationGesture];
+    }
+    
+    return allows;
 }
 
 @end
